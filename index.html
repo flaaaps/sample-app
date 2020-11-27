@@ -41,6 +41,7 @@
 		<a href="https://www.electron.build">electron-builder</a>'s auto updater.
 	</p>
 	<h2 id="version"></h2>
+	<p id="download-progress"></p>
 	<p class="credits">
 		Strongly inspired by
 		<a
@@ -79,6 +80,10 @@
 			message.innerText = 'Update Downloaded. It will be installed on restart. Restart now?';
 			restartButton.classList.remove('hidden');
 			notification.classList.remove('hidden');
+		});
+
+		ipcRenderer.on('update-progress', (event, arg) => {
+			document.getElementById('download-progress').innerText = arg;
 		});
 
 		function closeNotification() {
