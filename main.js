@@ -50,6 +50,7 @@ autoUpdater.on('update-downloaded', () => {
 	mainWindow.webContents.send('update_downloaded');
 });
 
+const log = require('electron-log');
 autoUpdater.logger = log;
 autoUpdater.on('download-progress', progressObj => {
 	let log_message = 'Download speed: ' + progressObj.bytesPerSecond;
