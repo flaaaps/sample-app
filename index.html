@@ -1,107 +1,122 @@
 <!DOCTYPE html>
 
 <head>
-	<title>Electron Auto Update Example</title>
-	<style>
-		body {
-			box-sizing: border-box;
-			margin: 0;
-			padding: 20px;
-			font-family: sans-serif;
-			background-color: #eaeaea;
-			text-align: center;
-		}
+    <title>Electron Auto Update Example</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 20px;
+            font-family: sans-serif;
+            background-color: #eaeaea;
+            text-align: center;
+        }
 
-		#notification {
-			position: fixed;
-			bottom: 20px;
-			left: 20px;
-			width: 200px;
-			padding: 20px;
-			border-radius: 5px;
-			background-color: white;
-			box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-		}
+        .border {
+            position: absolute;
+            background: gold;
+            left: 0px;
+            top: -2px;
+            height: 90px;
+            z-index: -100;
+            width: 100%;
+            transition: .4s ease;
+            border-radius: 5px;
+        }
 
-		.hidden {
-			display: none;
-		}
+        #notification {
+            position: relative;
+            left: 20px;
+            top: 20px;
+            width: 200px;
+            height: 100px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: white;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        }
 
-		/* additions */
-		.credits {
-			margin-top: 15px;
-		}
-	</style>
+        .hidden {
+            display: none;
+        }
+
+        /* additions */
+        .credits {
+            margin-top: 15px;
+        }
+    </style>
 </head>
 
 <body>
-	<h1>Electron Auto Update Example</h1>
-	<p>
-		A simple program that demonstrates
-		<a href="https://www.electron.build">electron-builder</a>'s auto updater.
-	</p>
-	<h2 id="version"></h2>
-	<p id="download-progress"></p>
-	<p class="credits">
-		Strongly inspired by
-		<a
-			href="https://medium.com/@johndyer24/creating-and-deploying-an-auto-updating-electron-app-for-mac-and-windows-using-electron-builder-6a3982c0cee6"
-			>Johndyer24's article</a
-		>
-	</p>
-	<div id="notification" class="hidden">
-		<p id="message"></p>
-		<button id="close-button" onClick="closeNotification()">Close</button>
-		<button id="restart-button" onClick="restartApp()" class="hidden">Restart</button>
-	</div>
-	<script>
-		const { ipcRenderer, shell } = require('electron');
-		const version = document.getElementById('version');
+    <h1>Electron Auto Update Example</h1>
+    <p>
+        A simple program that demonstrates
+        <a href="https://www.electron.build">electron-builder</a>'s auto updater.
+    </p>
+    <h2 id="version"></h2>
+    <p id="download-progress"></p>
+    <p class="credits">
+        Strongly inspired by
+        <a
+            href="https://medium.com/@johndyer24/creating-and-deploying-an-auto-updating-electron-app-for-mac-and-windows-using-electron-builder-6a3982c0cee6">Johndyer24's
+            article</a>
+    </p>
+    <div id="notification" class="hidden">
+        <div class="border"></div>
+        <p id="message"></p>
+        <button id="close-button" onClick="closeNotification()">Close</button>
+        <button id="restart-button" onClick="restartApp()" class="hidden">Restart</button>
+    </div>
+    <script>
+        const { ipcRenderer, shell } = require('electron');
+        const version = document.getElementById('version');
 
-		ipcRenderer.send('app_version');
-		ipcRenderer.on('app_version', (event, arg) => {
-			ipcRenderer.removeAllListeners('app_version');
-			console.log(arg);
-			version.innerText = 'Version ' + arg.version;
-		});
+        ipcRenderer.send('app_version');
+        ipcRenderer.on('app_version', (event, arg) => {
+            ipcRenderer.removeAllListeners('app_version');
+            console.log(arg);
+            version.innerText = 'Version ' + arg.version;
+        });
 
-		const notification = document.getElementById('notification');
-		const message = document.getElementById('message');
-		const restartButton = document.getElementById('restart-button');
+        const notification = document.getElementById('notification');
+        const message = document.getElementById('message');
+        const restartButton = document.getElementById('restart-button');
 
-		ipcRenderer.on('update_available', () => {
-			ipcRenderer.removeAllListeners('update_available');
-			message.innerText = 'A new update is available. Downloading now...';
-			notification.classList.remove('hidden');
-		});
+        ipcRenderer.on('update_available', () => {
+            ipcRenderer.removeAllListeners('update_available');
+            message.innerText = 'A new update is available. Downloading now...';
+            notification.classList.remove('hidden');
+        });
 
-		ipcRenderer.on('update_downloaded', () => {
-			ipcRenderer.removeAllListeners('update_downloaded');
-			message.innerText = 'Update Downloaded. It will be installed on restart. Restart now?';
-			restartButton.classList.remove('hidden');
-			notification.classList.remove('hidden');
-		});
+        ipcRenderer.on('update_downloaded', () => {
+            ipcRenderer.removeAllListeners('update_downloaded');
+            message.innerText = 'Update Downloaded. It will be installed on restart. Restart now?';
+            restartButton.classList.remove('hidden');
+            notification.classList.remove('hidden');
+        });
 
-		ipcRenderer.on('update-progress', (event, arg) => {
-			document.getElementById('download-progress').innerText = arg;
-		});
+        ipcRenderer.on('update-progress', (event, arg) => {
+            console.log(arg)
+            document.getElementById('download-progress').innerText = arg;
+            document.querySelector('.border').style.width = arg
+        });
 
-		function closeNotification() {
-			notification.classList.add('hidden');
-		}
+        function closeNotification() {
+            notification.classList.add('hidden');
+        }
 
-		function restartApp() {
-			ipcRenderer.send('restart_app');
-		}
+        function restartApp() {
+            ipcRenderer.send('restart_app');
+        }
 
-		// open in browser
-		const links = document.querySelectorAll('a[href^="http"]');
-		// console.log(...a);
-		links.forEach(link => {
-			link.addEventListener('click', e => {
-				e.preventDefault();
-				shell.openExternal(e.target.href);
-			});
-		});
-	</script>
+        // open in browser
+        const links = document.querySelectorAll('a[href^="http"]');
+        // console.log(...a);
+        links.forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                shell.openExternal(e.target.href);
+            });
+        });
+    </script>
 </body>
